@@ -1,65 +1,59 @@
 package com.fiap.video.infrastructure.adapters;
 
 import com.fiap.video.core.domain.Video;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.Java2DFrameConverter;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Component
 public class VideoProcessorAdapter {
 
-    private static final String FFMPEG_PATH = "C:/Users/hackw/OneDrive/Desktop/hackton/fiap_video_no_db_project/ffmpeg.exe";
-
     public void extractFrames(Video video, String outputFolder, int intervalSeconds) {
         try {
-            // Cria o diretório para os frames, se não existir
             Files.createDirectories(Paths.get(outputFolder));
 
-            // Comando do FFmpeg para extrair frames
-            String command = String.format(
-                    "\"%s\" -i \"%s\" -vf fps=1/%d \"%s/frame_%%04d.jpg\"",
-                    FFMPEG_PATH,
-                    video.getPath(),
-                    intervalSeconds,
-                    outputFolder
-            );
+            try (FFmpegFrameGrabber frameGrabber = new FFmpegFrameGrabber(video.getPath())) {
+                frameGrabber.start();
+                int frameRate = (int) frameGrabber.getFrameRate();
+                int frameInterval = frameRate * intervalSeconds;
+                Java2DFrameConverter converter = new Java2DFrameConverter();
+                int frameNumber = 0;
 
-            // Exibe o comando no log para depuração
-            System.out.println("Executing command: " + command);
-
-            // Executa o comando
-            Process process = Runtime.getRuntime().exec(command);
-
-            // Captura a saída de erro do FFmpeg
-            try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                String line;
-                while ((line = errorReader.readLine()) != null) {
-                    System.err.println(line); // Exibe os erros no console
+                for (int i = 0; i < frameGrabber.getLengthInFrames(); i += frameInterval) {
+                    frameGrabber.setFrameNumber(i);
+                    Frame frame = frameGrabber.grabImage();
+                    if (frame != null) {
+                        BufferedImage image = converter.convert(frame);
+                        if (image != null) {
+                            String frameFileName = String.format("%s/frame_%04d.jpg", outputFolder, frameNumber++);
+                            ImageIO.write(image, "jpg", new File(frameFileName));
+                        }
+                    }
                 }
+                frameGrabber.stop();
             }
-
-            // Aguarda o término do comando
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new RuntimeException("FFmpeg failed with exit code: " + exitCode);
-            }
-
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Error during frame extraction", e);
         }
     }
 
     public void compressFrames(String folderPath, String zipFilePath) {
-        try (var zos = new java.util.zip.ZipOutputStream(Files.newOutputStream(Paths.get(zipFilePath)))) {
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(Paths.get(zipFilePath)))) {
             Files.walk(Paths.get(folderPath))
                     .filter(Files::isRegularFile)
                     .forEach(path -> {
                         try {
-                            zos.putNextEntry(new java.util.zip.ZipEntry(Paths.get(folderPath).relativize(path).toString()));
+                            zos.putNextEntry(new ZipEntry(Paths.get(folderPath).relativize(path).toString()));
                             Files.copy(path, zos);
                             zos.closeEntry();
                         } catch (IOException e) {
