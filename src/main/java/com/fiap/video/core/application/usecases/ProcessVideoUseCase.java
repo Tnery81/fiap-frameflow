@@ -18,10 +18,9 @@ public class ProcessVideoUseCase {
         this.videoRepository = videoRepository;
     }
 
-    public void process(String videoPath, String outputFolder, int intervalSeconds, String zipFilePath) {
+    public void process(String videoPath, int intervalSeconds, String zipFilePath) {
         Video video = new Video(videoPath, Duration.ZERO); // Placeholder for duration calculation
-        videoProcessorAdapter.extractFrames(video, outputFolder, intervalSeconds);
-        videoProcessorAdapter.compressFrames(outputFolder, zipFilePath);
+        videoProcessorAdapter.extractFrames(video, zipFilePath, intervalSeconds);
         videoRepository.save(video);
     }
 
