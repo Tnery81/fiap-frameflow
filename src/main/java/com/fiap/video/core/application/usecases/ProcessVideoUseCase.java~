@@ -43,17 +43,10 @@ public class ProcessVideoUseCase {
             Video video = new Video(videoFile.getAbsolutePath(), Duration.ZERO);
             videoProcessorAdapter.extractFrames(video, zipFilePath, intervalSeconds);
 
-            String urlZipVideoCortesS3 = videoProcessorAdapter.extractFrames(video, zipFileName, intervalSeconds);
-
-            if (urlZipVideoCortesS3 != null) {
-                videoRepository.save(video);
-                snsAdapter.publishMessage(idSolicitacao, usuario, "PROCESSADO", email, zipFileName);
-            } else {
-                snsAdapter.publishMessage(idSolicitacao, usuario, "ERRO_NO_PROCESSAMENTO", email, null);
-            }
 
 
 
+            
         } catch (Exception e) {
             snsAdapter.publishMessage(idSolicitacao, usuario, "ERRO_NO_PROCESSAMENTO", email, "");
         }
