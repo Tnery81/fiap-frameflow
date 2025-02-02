@@ -16,17 +16,25 @@ public class VideoController {
     }
 
     @PostMapping("/process")
-    public ResponseEntity<String> processVideo(@RequestParam String videoPath,
-                                                @RequestParam String outputFolder,
-                                                @RequestParam int intervalSeconds,
-                                                @RequestParam String zipFilePath) {
-        processVideoUseCase.process(videoPath, outputFolder, intervalSeconds, zipFilePath);
-        return ResponseEntity.ok("Video processing completed.");
+    public ResponseEntity<String> processVideo(@RequestParam String videoKey,
+                                               @RequestParam int intervalSeconds
+    ) {
+        try {
+            processVideoUseCase.process(videoKey, intervalSeconds);
+            return ResponseEntity.ok("Video processing completed.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error during video processing: " + e.getMessage());
+        }
     }
 
-    @GetMapping("/{videoPath}")
-    public ResponseEntity<Video> getVideo(@PathVariable String videoPath) {
-        Video video = processVideoUseCase.getVideo(videoPath);
-        return ResponseEntity.ok(video);
+    @GetMapping("/{videoKey}")
+    public ResponseEntity<Video> getVideo(
+            @PathVariable String videoKey) {
+        try {
+            Video video = processVideoUseCase.getVideo(videoKey);
+            return ResponseEntity.ok(video);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).build();
+        }
     }
 }

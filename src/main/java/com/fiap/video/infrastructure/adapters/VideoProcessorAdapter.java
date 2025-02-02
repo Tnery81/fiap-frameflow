@@ -1,73 +1,108 @@
 package com.fiap.video.infrastructure.adapters;
 
+import com.fiap.video.config.ConfigS3;
 import com.fiap.video.core.domain.Video;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.Java2DFrameConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.BufferedReader;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Component
 public class VideoProcessorAdapter {
 
-    private static final String FFMPEG_PATH = "C:/Users/hackw/OneDrive/Desktop/hackton/fiap_video_no_db_project/ffmpeg.exe";
+    private final ConfigS3 configS3;
 
-    public void extractFrames(Video video, String outputFolder, int intervalSeconds) {
-        try {
-            // Cria o diretório para os frames, se não existir
-            Files.createDirectories(Paths.get(outputFolder));
+    @Value("${aws.s3.bucketZip}")
+    private String bucketZipName;
 
-            // Comando do FFmpeg para extrair frames
-            String command = String.format(
-                    "\"%s\" -i \"%s\" -vf fps=1/%d \"%s/frame_%%04d.jpg\"",
-                    FFMPEG_PATH,
-                    video.getPath(),
-                    intervalSeconds,
-                    outputFolder
-            );
+    public VideoProcessorAdapter(ConfigS3 configS3) {
+        this.configS3 = configS3;
+    }
 
-            // Exibe o comando no log para depuração
-            System.out.println("Executing command: " + command);
+    public String extractFrames(Video video, String zipFileName, int intervalSeconds) {
+        try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(video.getPath());
+             ByteArrayOutputStream zipBaos = new ByteArrayOutputStream();
+             ZipOutputStream zipOut = new ZipOutputStream(zipBaos)) {
 
-            // Executa o comando
-            Process process = Runtime.getRuntime().exec(command);
+            grabber.start();
+            Java2DFrameConverter converter = new Java2DFrameConverter();
+            int frameRate = (int) grabber.getFrameRate();
+            int frameInterval = frameRate * intervalSeconds;
+            int frameNumber = 0;
+            int savedFrames = 0;
 
-            // Captura a saída de erro do FFmpeg
-            try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                String line;
-                while ((line = errorReader.readLine()) != null) {
-                    System.err.println(line); // Exibe os erros no console
+            Frame frame;
+            while ((frame = grabber.grabImage()) != null) {
+                if (frameNumber % frameInterval == 0) {
+                    BufferedImage bufferedImage = converter.getBufferedImage(frame);
+
+                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
+                    ImageIO.write(bufferedImage, "jpg", imageBaos);
+                    byte[] imageBytes = imageBaos.toByteArray();
+
+                    String fileName = "frame_" + String.format("%04d", frameNumber) + ".jpg";
+                    zipOut.putNextEntry(new ZipEntry(fileName));
+                    zipOut.write(imageBytes);
+                    zipOut.closeEntry();
+
+                    savedFrames++;
                 }
+                frameNumber++;
             }
 
-            // Aguarda o término do comando
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new RuntimeException("FFmpeg failed with exit code: " + exitCode);
+            grabber.stop();
+            zipOut.finish();
+
+            if (savedFrames == 0) {
+                System.out.println("Nenhum frame foi extraído. O ZIP pode estar vazio.");
+                return null;
             }
 
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Error during frame extraction", e);
+            System.out.println("Total de frames extraídos: " + savedFrames);
+            return uploadToS3(zipFileName, zipBaos.toByteArray());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
-    public void compressFrames(String folderPath, String zipFilePath) {
-        try (var zos = new java.util.zip.ZipOutputStream(Files.newOutputStream(Paths.get(zipFilePath)))) {
-            Files.walk(Paths.get(folderPath))
-                    .filter(Files::isRegularFile)
-                    .forEach(path -> {
-                        try {
-                            zos.putNextEntry(new java.util.zip.ZipEntry(Paths.get(folderPath).relativize(path).toString()));
-                            Files.copy(path, zos);
-                            zos.closeEntry();
-                        } catch (IOException e) {
-                            throw new RuntimeException("Failed to zip file", e);
-                        }
-                    });
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create ZIP file", e);
+    private String uploadToS3(String zipFileName, byte[] zipData) {
+        try {
+            System.out.println("Iniciando upload para o bucket: " + bucketZipName + " com key: " + zipFileName);
+
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketZipName)
+                    .key(zipFileName)
+                    .acl(ObjectCannedACL.PUBLIC_READ)
+                    .build();
+
+            configS3.getS3Client().putObject(putObjectRequest, RequestBody.fromBytes(zipData));
+
+            String fileUrl = configS3.getS3Client().utilities().getUrl(GetUrlRequest.builder()
+                    .bucket(bucketZipName)
+                    .key(zipFileName)
+                    .build()).toString();
+
+            System.out.println("Upload concluído. URL: " + fileUrl);
+            return fileUrl;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Erro ao fazer upload para S3: " + e.getMessage());
+            return null;
         }
     }
 }
