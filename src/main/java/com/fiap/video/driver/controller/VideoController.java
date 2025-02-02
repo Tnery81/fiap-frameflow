@@ -15,26 +15,23 @@ public class VideoController {
         this.processVideoUseCase = processVideoUseCase;
     }
 
-    // Processamento de vídeo usando S3
     @PostMapping("/process")
-    public ResponseEntity<String> processVideo(@RequestParam String bucketName,
-                                               @RequestParam String videoKey,
+    public ResponseEntity<String> processVideo(@RequestParam String videoKey,
                                                @RequestParam int intervalSeconds
-                                               ) {
+    ) {
         try {
-            processVideoUseCase.process(bucketName, videoKey, intervalSeconds);
+            processVideoUseCase.process(videoKey, intervalSeconds);
             return ResponseEntity.ok("Video processing completed.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error during video processing: " + e.getMessage());
         }
     }
 
-    // Obter informações do vídeo
-    @GetMapping("/{bucketName}/{videoKey}")
-    public ResponseEntity<Video> getVideo(@PathVariable String bucketName,
-                                          @PathVariable String videoKey) {
+    @GetMapping("/{videoKey}")
+    public ResponseEntity<Video> getVideo(
+            @PathVariable String videoKey) {
         try {
-            Video video = processVideoUseCase.getVideo(bucketName, videoKey);
+            Video video = processVideoUseCase.getVideo(videoKey);
             return ResponseEntity.ok(video);
         } catch (Exception e) {
             return ResponseEntity.status(404).build();

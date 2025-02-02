@@ -21,8 +21,7 @@ public class ConfigS3 {
     @Value("${aws.token}")
     private String token;
 
-    @Value("${aws.region}")
-    private String regionName;
+    private final String regionName = Region.US_EAST_1.toString();
 
     @Bean
     public S3Client getS3Client() {

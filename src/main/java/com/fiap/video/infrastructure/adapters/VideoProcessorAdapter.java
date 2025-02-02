@@ -1,5 +1,6 @@
 package com.fiap.video.infrastructure.adapters;
 
+import com.fiap.video.config.ConfigS3;
 import com.fiap.video.core.domain.Video;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
@@ -7,7 +8,6 @@ import org.bytedeco.javacv.Java2DFrameConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -22,13 +22,13 @@ import java.util.zip.ZipOutputStream;
 @Component
 public class VideoProcessorAdapter {
 
-    private final S3Client s3Client;
+    private final ConfigS3 configS3;
 
     @Value("${aws.s3.bucketZip}")
-    private String bucketName;
+    private String bucketZipName;
 
-    public VideoProcessorAdapter(S3Client s3Client) {
-        this.s3Client = s3Client;
+    public VideoProcessorAdapter(ConfigS3 configS3) {
+        this.configS3 = configS3;
     }
 
     public String extractFrames(Video video, String zipFileName, int intervalSeconds) {
@@ -41,28 +41,36 @@ public class VideoProcessorAdapter {
             int frameRate = (int) grabber.getFrameRate();
             int frameInterval = frameRate * intervalSeconds;
             int frameNumber = 0;
+            int savedFrames = 0;
 
             Frame frame;
             while ((frame = grabber.grabImage()) != null) {
                 if (frameNumber % frameInterval == 0) {
                     BufferedImage bufferedImage = converter.getBufferedImage(frame);
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    ImageIO.write(bufferedImage, "jpg", baos);
-                    baos.flush();
+                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
+                    ImageIO.write(bufferedImage, "jpg", imageBaos);
+                    byte[] imageBytes = imageBaos.toByteArray();
 
-                    ZipEntry zipEntry = new ZipEntry("frame_" + String.format("%04d", frameNumber) + ".jpg");
-                    zipOut.putNextEntry(zipEntry);
-                    zipOut.write(baos.toByteArray());
+                    String fileName = "frame_" + String.format("%04d", frameNumber) + ".jpg";
+                    zipOut.putNextEntry(new ZipEntry(fileName));
+                    zipOut.write(imageBytes);
                     zipOut.closeEntry();
 
-                    baos.close();
+                    savedFrames++;
                 }
                 frameNumber++;
             }
 
             grabber.stop();
+            zipOut.finish();
 
+            if (savedFrames == 0) {
+                System.out.println("Nenhum frame foi extraído. O ZIP pode estar vazio.");
+                return null;
+            }
+
+            System.out.println("Total de frames extraídos: " + savedFrames);
             return uploadToS3(zipFileName, zipBaos.toByteArray());
 
         } catch (IOException e) {
@@ -73,21 +81,19 @@ public class VideoProcessorAdapter {
 
     private String uploadToS3(String zipFileName, byte[] zipData) {
         try {
-            String fileKey = zipFileName; // Nome do arquivo gerado
-
-            System.out.println("Iniciando upload para o bucket: " + bucketName + " com key: " + fileKey);
+            System.out.println("Iniciando upload para o bucket: " + bucketZipName + " com key: " + zipFileName);
 
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(fileKey)
+                    .bucket(bucketZipName)
+                    .key(zipFileName)
                     .acl(ObjectCannedACL.PUBLIC_READ)
                     .build();
 
-            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(zipData));
+            configS3.getS3Client().putObject(putObjectRequest, RequestBody.fromBytes(zipData));
 
-            String fileUrl = s3Client.utilities().getUrl(GetUrlRequest.builder()
-                    .bucket(bucketName)
-                    .key(fileKey)
+            String fileUrl = configS3.getS3Client().utilities().getUrl(GetUrlRequest.builder()
+                    .bucket(bucketZipName)
+                    .key(zipFileName)
                     .build()).toString();
 
             System.out.println("Upload concluído. URL: " + fileUrl);
@@ -99,6 +105,4 @@ public class VideoProcessorAdapter {
             return null;
         }
     }
-
-
 }

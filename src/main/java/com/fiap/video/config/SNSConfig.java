@@ -49,8 +49,6 @@ public class SNSConfig {
         return snsClient;
     }
 
-
-
     @Bean(name = "productEventsTopic")
     public Topic snsProductEventsTopic() {
 
