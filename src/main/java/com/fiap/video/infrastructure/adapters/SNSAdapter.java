@@ -5,6 +5,8 @@ import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.services.sns.model.Topic;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fiap.video.core.application.enums.VideoStatus;
+import com.fiap.video.core.domain.VideoMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -26,14 +28,16 @@ public class SNSAdapter {
         this.productEventsTopic = productEventsTopic;
     }
 
-    public void publishMessage(String idSolicitacao, String usuario, String status, String email, String urlVideoCortesS3) {
+    public void publishMessage(VideoMessage videoMessage, VideoStatus status,  String zipKeyS3, String videoUrlS3) {
         try {
             Map<String, String> message = new HashMap<>();
-            message.put("idSolicitacao", idSolicitacao);
-            message.put("usuario", usuario);
-            message.put("status", status);
-            message.put("email", email);
-            message.put("urlVideoCortesS3", urlVideoCortesS3);
+            message.put("id", videoMessage.getId().toString());
+            message.put("user", videoMessage.getUser());
+            message.put("status", status.toString());
+            message.put("email",  videoMessage.getEmail());
+            message.put("videoKeyS3", videoMessage.getVideoKeyS3());
+            message.put("zipKeyS3", zipKeyS3);
+            message.put("videoUrlS3", videoUrlS3);
 
             String jsonMessage = objectMapper.writeValueAsString(message);
 

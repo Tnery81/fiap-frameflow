@@ -2,6 +2,7 @@ package com.fiap.video.driver.controller;
 
 import com.fiap.video.core.application.usecases.ProcessVideoUseCase;
 import com.fiap.video.core.domain.Video;
+import com.fiap.video.core.domain.VideoMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,14 +17,14 @@ public class VideoController {
     }
 
     @PostMapping("/process")
-    public ResponseEntity<String> processVideo(@RequestParam String videoKey,
-                                               @RequestParam int intervalSeconds
-    ) {
+    public String processVideo(@RequestBody VideoMessage videoMessage) {
         try {
-            processVideoUseCase.process(videoKey, intervalSeconds);
-            return ResponseEntity.ok("Video processing completed.");
+            processVideoUseCase.process(
+                    videoMessage
+            );
+            return "Processamento iniciado com sucesso!";
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error during video processing: " + e.getMessage());
+            return "Erro ao iniciar o processamento: " + e.getMessage();
         }
     }
 
