@@ -1,15 +1,15 @@
 package com.fiap.video.core.application.usecases;
 
+import com.fiap.video.core.application.enums.VideoStatus;
 import com.fiap.video.core.domain.Video;
+import com.fiap.video.core.domain.VideoMessage;
 import com.fiap.video.infrastructure.adapters.VideoDownloadAdapter;
 import com.fiap.video.infrastructure.adapters.SNSAdapter;
 import com.fiap.video.infrastructure.adapters.VideoProcessorAdapter;
 import com.fiap.video.infrastructure.memory.InMemoryVideoRepository;
 import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.time.Duration;
-import java.util.UUID;
 
 @Service
 public class ProcessVideoUseCase {
@@ -26,16 +26,20 @@ public class ProcessVideoUseCase {
         this.s3Service = s3Service;
     }
 
-    public void process(String videoKey, int intervalSeconds) {
-        String idSolicitacao = UUID.randomUUID().toString();
-        String usuario = "teste";
-        String email = "xyz@mail.com";
-        String zipFileName = idSolicitacao + ".zip";
+    public void process(VideoMessage videoMessage) {
+        String zipFileName = videoMessage.getVideoKeyS3().replace(".mp4", ".zip");
+        int intervalSeconds;
+
+        if(videoMessage.getIntervalSeconds() != null){
+            intervalSeconds = videoMessage.getIntervalSeconds();
+        }else{
+            intervalSeconds = 10;
+        }
 
         try {
-            snsAdapter.publishMessage(idSolicitacao, usuario, "EM_PROCESSAMENTO", email, zipFileName);
+            snsAdapter.publishMessage(videoMessage, VideoStatus.IN_PROGRESS, zipFileName, VideoStatus.IN_PROGRESS.toString());
 
-            File videoFile = s3Service.downloadFile(videoKey);
+            File videoFile = s3Service.downloadFile(videoMessage.getVideoKeyS3());
 
             Video video = new Video(videoFile.getAbsolutePath(), Duration.ZERO);
 
@@ -43,14 +47,14 @@ public class ProcessVideoUseCase {
 
             if (urlZipVideoCortesS3 != null) {
                 videoRepository.save(video);
-                snsAdapter.publishMessage(idSolicitacao, usuario, "PROCESSADO", email, urlZipVideoCortesS3);
+                snsAdapter.publishMessage(videoMessage, VideoStatus.COMPLETED, zipFileName, urlZipVideoCortesS3);
             } else {
-                snsAdapter.publishMessage(idSolicitacao, usuario, "ERRO_NO_PROCESSAMENTO", email, ".zip");
+                snsAdapter.publishMessage(videoMessage,  VideoStatus.PROCESSING_ERROR, VideoStatus.PROCESSING_ERROR.toString(),".zip");
             }
 
 
         } catch (Exception e) {
-            snsAdapter.publishMessage(idSolicitacao, usuario, "ERRO_NO_PROCESSAMENTO", email, ".zip");
+            snsAdapter.publishMessage(videoMessage,  VideoStatus.PROCESSING_ERROR, VideoStatus.PROCESSING_ERROR.toString(),".zip");
         }
     }
 

@@ -8,6 +8,7 @@ import com.amazonaws.services.sns.model.GetTopicAttributesRequest;
 import com.amazonaws.services.sns.model.GetTopicAttributesResult;
 import com.amazonaws.services.sns.model.SetTopicAttributesRequest;
 import com.amazonaws.services.sns.model.Topic;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,15 +17,19 @@ import software.amazon.awssdk.regions.Region;
 @Configuration
 public class SNSConfig {
 
+    @Setter
     @Value("${aws.sns.topicArn}")
     private String topicArn;
 
+    @Setter
     @Value("${aws.accessKeyId}")
     private String accessKeyId;
 
+    @Setter
     @Value("${aws.secretAccessKey}")
     private String secretAccessKey;
 
+    @Setter
     @Value("${aws.token}")
     private String token;
 

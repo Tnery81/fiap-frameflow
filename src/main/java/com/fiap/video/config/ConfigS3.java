@@ -1,5 +1,6 @@
 package com.fiap.video.config;
 
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,12 +13,15 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 public class ConfigS3 {
 
+    @Setter
     @Value("${aws.accessKeyId}")
     private String accessKeyId;
 
+    @Setter
     @Value("${aws.secretAccessKey}")
     private String secretAccessKey;
 
+    @Setter
     @Value("${aws.token}")
     private String token;
 
