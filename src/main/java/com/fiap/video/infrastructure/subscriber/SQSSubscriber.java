@@ -1,9 +1,6 @@
-package com.fiap.video.infrastructure.listener;
+package com.fiap.video.infrastructure.subscriber;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fiap.video.core.application.enums.VideoStatus;
 import com.fiap.video.core.application.usecases.ProcessVideoUseCase;
-import com.fiap.video.core.domain.SnsMessageWrapper;
 import com.fiap.video.core.domain.VideoMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -13,19 +10,21 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class SqsListener {
+public class SQSSubscriber {
 
 
     private final ProcessVideoUseCase processVideoUseCase;
 
     @Autowired
-    public SqsListener(ProcessVideoUseCase processVideoUseCase) {
+    public SQSSubscriber(ProcessVideoUseCase processVideoUseCase) {
         this.processVideoUseCase = processVideoUseCase;
     }
 
     @io.awspring.cloud.sqs.annotation.SqsListener("${spring.cloud.aws.sqs.queue-name}")
     public void receiveMessage(Message<String> message) {
         String content = message.getPayload();
+        log.info("Mensagem recebida: " + message.toString());
+
         if (content == null) {
             log.error("Received null content from SQS");
             return;

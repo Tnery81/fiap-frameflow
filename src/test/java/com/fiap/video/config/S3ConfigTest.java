@@ -12,10 +12,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
-class ConfigS3Test {
+class S3ConfigTest {
 
     @InjectMocks
-    private ConfigS3 configS3;
+    private S3Config s3Config;
 
     @Mock
     private AwsCredentialsProvider awsCredentialsProvider;
@@ -24,11 +24,11 @@ class ConfigS3Test {
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        configS3 = new ConfigS3();
-        configS3.setAccessKeyId("mock-access-key");
-        configS3.setSecretAccessKey("mock-secret-key");
-        configS3.setToken("mock-token");
-        configS3.setAccessKeyId("mock-acess");
+        s3Config = new S3Config();
+        s3Config.setAccessKeyId("mock-access-key");
+        s3Config.setSecretAccessKey("mock-secret-key");
+        s3Config.setToken("mock-token");
+        s3Config.setAccessKeyId("mock-acess");
     }
 
     @Test
@@ -36,7 +36,7 @@ class ConfigS3Test {
         AwsSessionCredentials mockCredentials = AwsSessionCredentials.create("mock-access-key", "mock-secret-key", "mock-token");
         when(awsCredentialsProvider.resolveCredentials()).thenReturn(mockCredentials);
 
-        S3Client s3Client = configS3.getS3Client();
+        S3Client s3Client = s3Config.getS3Client();
 
         assertNotNull(s3Client, "S3Client foi criado");
     }

@@ -11,7 +11,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
-public class ConfigS3 {
+public class S3Config {
 
     @Setter
     @Value("${aws.accessKeyId}")

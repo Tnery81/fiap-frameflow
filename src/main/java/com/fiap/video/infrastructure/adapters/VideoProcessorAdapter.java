@@ -1,6 +1,6 @@
 package com.fiap.video.infrastructure.adapters;
 
-import com.fiap.video.config.ConfigS3;
+import com.fiap.video.config.S3Config;
 import com.fiap.video.core.domain.Video;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
@@ -22,13 +22,13 @@ import java.util.zip.ZipOutputStream;
 @Component
 public class VideoProcessorAdapter {
 
-    private final ConfigS3 configS3;
+    private final S3Config s3Config;
 
     @Value("${aws.s3.bucketZip}")
     private String bucketZipName;
 
-    public VideoProcessorAdapter(ConfigS3 configS3) {
-        this.configS3 = configS3;
+    public VideoProcessorAdapter(S3Config s3Config) {
+        this.s3Config = s3Config;
     }
 
     public String extractFrames(Video video, String zipFileName, int intervalSeconds) {
@@ -41,7 +41,6 @@ public class VideoProcessorAdapter {
             int frameRate = (int) grabber.getFrameRate();
             int frameInterval = frameRate * intervalSeconds;
             int frameNumber = 0;
-            int savedFrames = 0;
 
             Frame frame;
             while ((frame = grabber.grabImage()) != null) {
@@ -57,7 +56,7 @@ public class VideoProcessorAdapter {
                     zipOut.write(imageBytes);
                     zipOut.closeEntry();
 
-                    savedFrames++;
+
                 }
                 frameNumber++;
             }
@@ -65,43 +64,31 @@ public class VideoProcessorAdapter {
             grabber.stop();
             zipOut.finish();
 
-            if (savedFrames == 0) {
-                System.out.println("Nenhum frame foi extraído. O ZIP pode estar vazio.");
-                return null;
-            }
 
-            System.out.println("Total de frames extraídos: " + savedFrames);
             return uploadToS3(zipFileName, zipBaos.toByteArray());
 
         } catch (IOException e) {
-            e.printStackTrace();
             return null;
         }
     }
 
     private String uploadToS3(String zipFileName, byte[] zipData) {
         try {
-            System.out.println("Iniciando upload para o bucket: " + bucketZipName + " com key: " + zipFileName);
-
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketZipName)
                     .key(zipFileName)
                     .acl(ObjectCannedACL.PUBLIC_READ)
                     .build();
 
-            configS3.getS3Client().putObject(putObjectRequest, RequestBody.fromBytes(zipData));
+            s3Config.getS3Client().putObject(putObjectRequest, RequestBody.fromBytes(zipData));
 
-            String fileUrl = configS3.getS3Client().utilities().getUrl(GetUrlRequest.builder()
+            return s3Config.getS3Client().utilities().getUrl(GetUrlRequest.builder()
                     .bucket(bucketZipName)
                     .key(zipFileName)
                     .build()).toString();
 
-            System.out.println("Upload concluído. URL: " + fileUrl);
-            return fileUrl;
-
         } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Erro ao fazer upload para S3: " + e.getMessage());
+
             return null;
         }
     }

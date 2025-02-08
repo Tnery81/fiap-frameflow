@@ -1,6 +1,6 @@
 package com.fiap.video.infrastructure.adapters;
 
-import com.fiap.video.config.ConfigS3;
+import com.fiap.video.config.S3Config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,7 +22,7 @@ class VideoDownloadAdapterTest {
     private VideoDownloadAdapter videoDownloadAdapter;
 
     @Mock
-    private ConfigS3 configS3;
+    private S3Config s3Config;
 
     @Mock
     private S3Client s3Client;
@@ -33,14 +33,13 @@ class VideoDownloadAdapterTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        when(configS3.getS3Client()).thenReturn(s3Client);
+        when(s3Config.getS3Client()).thenReturn(s3Client);
     }
 
     @Test
     void shouldDownloadFileSuccessfully() throws Exception {
         String key = "video.mp4";
         byte[] content = "Test content".getBytes();
-        ByteArrayInputStream mockInputStream = new ByteArrayInputStream(content);
         when(s3Client.getObject(any(GetObjectRequest.class))).thenReturn(responseInputStream);
         when(responseInputStream.read(any(byte[].class))).thenAnswer(invocation -> {
             byte[] buffer = invocation.getArgument(0);
@@ -52,7 +51,7 @@ class VideoDownloadAdapterTest {
         assertNotNull(downloadedFile, "Downloaded file should not be null");
         assertTrue(downloadedFile.exists(), "Downloaded file should exist");
         verify(s3Client, times(1)).getObject(any(GetObjectRequest.class));
-        downloadedFile.delete(); // Cleanup
+        downloadedFile.delete();
     }
 
     @Test

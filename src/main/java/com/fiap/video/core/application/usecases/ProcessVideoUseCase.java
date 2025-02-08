@@ -6,6 +6,7 @@ import com.fiap.video.core.domain.VideoMessage;
 import com.fiap.video.infrastructure.adapters.VideoDownloadAdapter;
 import com.fiap.video.infrastructure.adapters.SNSAdapter;
 import com.fiap.video.infrastructure.adapters.VideoProcessorAdapter;
+import com.fiap.video.infrastructure.exception.VideoRetrievalException;
 import com.fiap.video.infrastructure.memory.InMemoryVideoRepository;
 import org.springframework.stereotype.Service;
 import java.io.File;
@@ -66,7 +67,7 @@ public class ProcessVideoUseCase {
 
             return new Video(zipFile.getAbsolutePath(), Duration.ZERO);
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao obter o vídeo ZIP do S3: " + e.getMessage(), e);
+            throw new VideoRetrievalException("Erro ao obter o vídeo ZIP do S3: " + e.getMessage(), e);
         }
     }
 }

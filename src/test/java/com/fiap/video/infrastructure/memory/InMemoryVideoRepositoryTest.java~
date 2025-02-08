@@ -1,4 +1,0 @@
-package com.fiap.video.infrastructure.memory;
-
-public class InMemoryVideoRepositoryTest {
-}

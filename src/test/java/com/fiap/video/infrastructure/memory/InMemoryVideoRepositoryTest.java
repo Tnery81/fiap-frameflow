@@ -1,63 +1,40 @@
 package com.fiap.video.infrastructure.memory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fiap.video.core.application.usecases.ProcessVideoUseCase;
-import com.fiap.video.core.domain.SnsMessageWrapper;
-import com.fiap.video.core.domain.VideoMessage;
-import com.fiap.video.infrastructure.listener.SqsConsumer;
+
+import com.fiap.video.core.domain.Video;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-import static org.mockito.Mockito.*;
+import java.time.Duration;
 
-public class InMemoryVideoRepositoryTest {
+import static org.junit.jupiter.api.Assertions.*;
 
-    @Mock
-    private ObjectMapper objectMapper;
+class InMemoryVideoRepositoryTest {
 
-    @Mock
-    private ProcessVideoUseCase processVideoUseCase;
-
-    @InjectMocks
-    private SqsConsumer sqsConsumer;
+    private InMemoryVideoRepository videoRepository;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        videoRepository = new InMemoryVideoRepository();
     }
 
     @Test
-    void testReceiveMessage_shouldProcessVideoMessage() throws Exception {
-        SnsMessageWrapper snsMessageWrapper = new SnsMessageWrapper();
-        snsMessageWrapper.setMessage("{\"videoId\":\"123\",\"bucket\":\"my-bucket\",\"path\":\"video.mp4\"}");
-        VideoMessage videoMessage = new VideoMessage();
-        when(objectMapper.readValue(snsMessageWrapper.getMessage(), VideoMessage.class)).thenReturn(videoMessage);
-        sqsConsumer.receiveMessage(snsMessageWrapper);
-        verify(processVideoUseCase, times(1)).process(videoMessage);
+    void testSave_shouldStoreVideo() {
+        // Arrange
+        Video video = new Video("/path/to/video.mp4", Duration.ofSeconds(120));
+
+        // Act
+        videoRepository.save(video);
+
+        // Assert
+        assertEquals(video, videoRepository.findByPath(video.getPath()));
     }
 
     @Test
-    void testReceiveMessage_shouldHandleNullMessage() {
-        SnsMessageWrapper snsMessageWrapper = new SnsMessageWrapper();
-        snsMessageWrapper.setMessage(null);
-        sqsConsumer.receiveMessage(snsMessageWrapper);
-        verify(processVideoUseCase, never()).process(any(VideoMessage.class));
-    }
+    void testGetVideo_shouldReturnNullWhenNotFound() {
+        // Act
+        Video result = videoRepository.findByPath("/invalid/path.mp4");
 
-    @Test
-    void testReceiveMessage_shouldHandleNullWrapper() {
-        sqsConsumer.receiveMessage(null);
-        verify(processVideoUseCase, never()).process(any(VideoMessage.class));
-    }
-
-    @Test
-    void testReceiveMessage_shouldHandleJsonParsingException() throws Exception {
-        SnsMessageWrapper snsMessageWrapper = new SnsMessageWrapper();
-        snsMessageWrapper.setMessage("invalid-json");
-        when(objectMapper.readValue(snsMessageWrapper.getMessage(), VideoMessage.class)).thenThrow(new RuntimeException("JSON parsing error"));
-        sqsConsumer.receiveMessage(snsMessageWrapper);
-        verify(processVideoUseCase, never()).process(any(VideoMessage.class));
+        // Assert
+        assertNull(result);
     }
 }

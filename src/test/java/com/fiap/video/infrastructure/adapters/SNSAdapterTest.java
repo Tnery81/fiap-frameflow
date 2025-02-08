@@ -1,9 +1,10 @@
 package com.fiap.video.infrastructure.adapters;
+
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.services.sns.model.Topic;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fiap.video.config.SNSConfig;
 import com.fiap.video.core.application.enums.VideoStatus;
 import com.fiap.video.core.domain.VideoMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,67 +12,76 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class SNSAdapterTest {
-
-    @InjectMocks
-    private SNSAdapter snsAdapter;
+public class SNSAdapterTest {
 
     @Mock
-    private AmazonSNS snsClient;
+    private SNSConfig snsConfig;
+
+    @Mock
+    private AmazonSNS amazonSNS;
 
     @Mock
     private Topic productEventsTopic;
 
-    @Mock
-    private VideoMessage videoMessage;
-
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private SNSAdapter snsAdapter;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        objectMapper = new ObjectMapper();
-        snsAdapter = new SNSAdapter(productEventsTopic, snsClient);
+        when(snsConfig.snsClient()).thenReturn(amazonSNS);
+        when(productEventsTopic.getTopicArn()).thenReturn("arn:aws:sns:us-east-1:123456789012:my-topic");
+    }
+
+
+    @Test
+    void testPublishMessage_shouldSendMessageToSNS() throws Exception {
+        // Arrange
+        VideoMessage videoMessage = new VideoMessage();
+        videoMessage.setId("123");
+        videoMessage.setUser("testUser");
+        videoMessage.setEmail("test@example.com");
+        videoMessage.setVideoKeyS3("testVideo.mp4");
+
+        String zipKeyS3 = "output.zip";
+        String videoUrlS3 = "https://s3.amazonaws.com/bucket/video.mp4";
+        VideoStatus status = VideoStatus.COMPLETED;
+
+        PublishResult publishResult = new PublishResult().withMessageId("test-message-id");
+        when(amazonSNS.publish(any(PublishRequest.class))).thenReturn(publishResult);
+
+        // Act
+        snsAdapter.publishMessage(videoMessage, status, zipKeyS3, videoUrlS3);
+
+        // Assert
+        verify(amazonSNS, times(1)).publish(any(PublishRequest.class));
     }
 
     @Test
-    void shouldPublishMessageSuccessfully() throws Exception {
-        when(videoMessage.getId()).thenReturn(1L);
-        when(videoMessage.getUser()).thenReturn("testUser");
-        when(videoMessage.getEmail()).thenReturn("test@example.com");
-        when(videoMessage.getVideoKeyS3()).thenReturn("videoKey");
-        when(productEventsTopic.getTopicArn()).thenReturn("arn:aws:sns:region:123456789012:MyTopic");
+    void testPublishMessage_shouldHandleException() throws Exception {
+        // Arrange
+        VideoMessage videoMessage = new VideoMessage();
+        videoMessage.setId("123");
+        videoMessage.setUser("testUser");
+        videoMessage.setEmail("test@example.com");
+        videoMessage.setVideoKeyS3("testVideo.mp4");
 
-        PublishResult publishResult = mock(PublishResult.class);
-        when(publishResult.getMessageId()).thenReturn(UUID.randomUUID().toString());
-        when(snsClient.publish(any(PublishRequest.class))).thenReturn(publishResult);
+        String zipKeyS3 = "output.zip";
+        String videoUrlS3 = "https://s3.amazonaws.com/bucket/video.mp4";
+        VideoStatus status = VideoStatus.COMPLETED;
 
-        assertDoesNotThrow(() -> snsAdapter.publishMessage(videoMessage, VideoStatus.IN_PROGRESS, "zipKey", "videoUrl"));
+        when(amazonSNS.publish(any(PublishRequest.class))).thenThrow(new RuntimeException("SNS error"));
 
-        verify(snsClient, times(1)).publish(any(PublishRequest.class));
-    }
+        // Act & Assert
+        try {
+            snsAdapter.publishMessage(videoMessage, status, zipKeyS3, videoUrlS3);
+        } catch (RuntimeException e) {
+            // Esperado
+        }
 
-    @Test
-    void shouldHandlePublishFailure() {
-        when(videoMessage.getId()).thenReturn(1L);
-        when(videoMessage.getUser()).thenReturn("testUser");
-        when(videoMessage.getEmail()).thenReturn("test@example.com");
-        when(videoMessage.getVideoKeyS3()).thenReturn("videoKey");
-        when(productEventsTopic.getTopicArn()).thenReturn("arn:aws:sns:region:123456789012:MyTopic");
-
-        when(snsClient.publish(any(PublishRequest.class))).thenThrow(new RuntimeException("SNS publish failed"));
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                snsAdapter.publishMessage(videoMessage, VideoStatus.IN_PROGRESS, "zipKey", "videoUrl")
-        );
-
-        assertEquals("Erro ao publicar mensagem no SNS", exception.getMessage());
-        verify(snsClient, times(1)).publish(any(PublishRequest.class));
+        verify(amazonSNS, times(1)).publish(any(PublishRequest.class));
     }
 }

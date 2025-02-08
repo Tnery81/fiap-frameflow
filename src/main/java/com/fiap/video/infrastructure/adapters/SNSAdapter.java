@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiap.video.config.SNSConfig;
 import com.fiap.video.core.application.enums.VideoStatus;
 import com.fiap.video.core.domain.VideoMessage;
+import com.fiap.video.infrastructure.exception.SnsPublishingException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +19,7 @@ public class SNSAdapter {
     private final SNSConfig snsConfig;
     private final Topic productEventsTopic;
     private final ObjectMapper objectMapper;
-    private static final String messageGroupId = "meu-message-group-id";
+    private static final String MEU_MESSAGE_GROUP_ID = "meu-message-group-id";
 
     public SNSAdapter(@Qualifier("productEventsTopic") Topic productEventsTopic, SNSConfig snsConfig) {
         this.snsConfig = snsConfig;
@@ -30,7 +31,7 @@ public class SNSAdapter {
         try {
 
             Map<String, String> message = new HashMap<>();
-            message.put("id", videoMessage.getId().toString());
+            message.put("id", videoMessage.getId());
             message.put("user", videoMessage.getUser());
             message.put("status", status.toString());
             message.put("email",  videoMessage.getEmail());
@@ -41,15 +42,13 @@ public class SNSAdapter {
             String jsonMessage = objectMapper.writeValueAsString(message);
 
             PublishRequest publishRequest = new PublishRequest(productEventsTopic.getTopicArn(), jsonMessage)
-                    .withMessageGroupId(messageGroupId)
+                    .withMessageGroupId(MEU_MESSAGE_GROUP_ID)
                     .withMessageDeduplicationId(UUID.randomUUID().toString());
 
-            PublishResult publishResult = snsConfig.snsClient().publish(publishRequest);
+            snsConfig.snsClient().publish(publishRequest);
 
-            String messageId = publishResult.getMessageId();
-            System.out.println("Mensagem publicada com sucesso! MessageId: " + messageId);
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao publicar mensagem no SNS", e);
+            throw new SnsPublishingException("Erro ao publicar mensagem no SNS", e);
         }
     }
 }

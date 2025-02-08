@@ -7,16 +7,14 @@ import com.fiap.video.infrastructure.adapters.VideoDownloadAdapter;
 import com.fiap.video.infrastructure.adapters.SNSAdapter;
 import com.fiap.video.infrastructure.adapters.VideoProcessorAdapter;
 import com.fiap.video.infrastructure.memory.InMemoryVideoRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.OngoingStubbing;
-
 import java.io.File;
-import java.time.Duration;
-
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -43,13 +41,20 @@ class ProcessVideoUseCaseTest {
     @Mock
     private File mockFile;
 
+    private AutoCloseable closeable;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
-    void testProcessVideoSuccess() throws Exception {
+    void testProcessVideoSuccess() {
 
         String videoKey = "video.mp4";
         String zipFileName = videoKey.replace(".mp4", ".zip");
@@ -69,7 +74,7 @@ class ProcessVideoUseCaseTest {
     }
 
     @Test
-    void testProcessVideoFailure() throws Exception {
+    void testProcessVideoFailure()  {
         String videoKey = "video.mp4";
         String zipFileName = videoKey.replace(".mp4", ".zip");
 
@@ -85,7 +90,7 @@ class ProcessVideoUseCaseTest {
     }
 
     @Test
-    void testProcessVideoExceptionHandling() throws Exception {
+    void testProcessVideoExceptionHandling() {
         String videoKey = "video.mp4";
         String zipFileName = videoKey.replace(".mp4", ".zip");
 
@@ -99,7 +104,7 @@ class ProcessVideoUseCaseTest {
     }
 
     @Test
-    void testGetVideoSuccess() throws Exception {
+    void testGetVideoSuccess() {
         String videoKey = "video.mp4";
         String zipKey = videoKey.replace(".mp4", ".zip");
         when(s3Service.downloadFile(zipKey)).thenReturn(mockFile);
@@ -111,7 +116,7 @@ class ProcessVideoUseCaseTest {
     }
 
     @Test
-    void testGetVideoFailure() throws Exception {
+    void testGetVideoFailure() {
         String videoKey = "video.mp4";
         String zipKey = videoKey.replace(".mp4", ".zip");
         when(s3Service.downloadFile(zipKey)).thenThrow(new RuntimeException("Download failed"));
