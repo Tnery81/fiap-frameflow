@@ -51,7 +51,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: secret-frameflow
-                  key: S3_VIDEO_KEY_AWSs
+                  key: S3_VIDEO_KEY_AWS
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
