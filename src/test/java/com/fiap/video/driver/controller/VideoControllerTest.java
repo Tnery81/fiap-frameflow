@@ -61,7 +61,7 @@ class VideoControllerTest {
 
         ResponseEntity<Video> response = videoController.getVideo(videoKey);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(video, response.getBody());
         verify(processVideoUseCase, times(1)).getVideo(videoKey);
     }
@@ -73,8 +73,9 @@ class VideoControllerTest {
 
         ResponseEntity<Video> response = videoController.getVideo(videoKey);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(404, response.getStatusCode().value());
         assertNull(response.getBody());
         verify(processVideoUseCase, times(1)).getVideo(videoKey);
     }
+
 }

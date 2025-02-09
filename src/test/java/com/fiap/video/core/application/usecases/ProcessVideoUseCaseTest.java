@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.stubbing.OngoingStubbing;
 import java.io.File;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +54,6 @@ class ProcessVideoUseCaseTest {
 
     @Test
     void testProcessVideoSuccess() {
-
         String videoKey = "video.mp4";
         String zipFileName = videoKey.replace(".mp4", ".zip");
         String expectedUrl = "mock-url-to-zip";
@@ -68,13 +66,14 @@ class ProcessVideoUseCaseTest {
 
         processVideoUseCase.process(videoMessage);
 
-        verify(snsAdapter, times(1)).publishMessage(eq(videoMessage), eq(VideoStatus.IN_PROGRESS), eq(zipFileName), eq(VideoStatus.IN_PROGRESS.toString()));
-        verify(snsAdapter, times(1)).publishMessage(eq(videoMessage), eq(VideoStatus.COMPLETED), eq(zipFileName), eq(expectedUrl));
+        verify(snsAdapter, times(1)).publishMessage(videoMessage, VideoStatus.IN_PROGRESS, zipFileName, VideoStatus.IN_PROGRESS.toString());
+        verify(snsAdapter, times(1)).publishMessage(videoMessage, VideoStatus.COMPLETED, zipFileName, expectedUrl);
         verify(videoRepository, times(1)).save(any(Video.class));
     }
 
+
     @Test
-    void testProcessVideoFailure()  {
+    void testProcessVideoFailure() {
         String videoKey = "video.mp4";
         String zipFileName = videoKey.replace(".mp4", ".zip");
 
@@ -83,8 +82,8 @@ class ProcessVideoUseCaseTest {
 
         processVideoUseCase.process(videoMessage);
 
-        verify(snsAdapter, times(1)).publishMessage(eq(videoMessage), eq(VideoStatus.IN_PROGRESS), eq(zipFileName), eq(VideoStatus.IN_PROGRESS.toString()));
-        verify(snsAdapter, times(1)).publishMessage(eq(videoMessage), eq(VideoStatus.PROCESSING_ERROR), eq(VideoStatus.PROCESSING_ERROR.toString()), eq(".zip"));
+        verify(snsAdapter, times(1)).publishMessage(videoMessage, VideoStatus.IN_PROGRESS, zipFileName, VideoStatus.IN_PROGRESS.toString());
+        verify(snsAdapter, times(1)).publishMessage(videoMessage, VideoStatus.PROCESSING_ERROR, VideoStatus.PROCESSING_ERROR.toString(), ".zip");
         verify(videoRepository, times(0)).save(any());
     }
 
@@ -98,9 +97,10 @@ class ProcessVideoUseCaseTest {
 
         processVideoUseCase.process(videoMessage);
 
-        verify(snsAdapter, times(1)).publishMessage(eq(videoMessage), eq(VideoStatus.IN_PROGRESS), eq(zipFileName), eq(VideoStatus.IN_PROGRESS.toString()));
-        verify(snsAdapter, times(1)).publishMessage(eq(videoMessage), eq(VideoStatus.PROCESSING_ERROR), eq(VideoStatus.PROCESSING_ERROR.toString()), eq(".zip"));
+        verify(snsAdapter, times(1)).publishMessage(videoMessage, VideoStatus.IN_PROGRESS, zipFileName, VideoStatus.IN_PROGRESS.toString());
+        verify(snsAdapter, times(1)).publishMessage(videoMessage, VideoStatus.PROCESSING_ERROR, VideoStatus.PROCESSING_ERROR.toString(), ".zip");
     }
+
 
     @Test
     void testGetVideoSuccess() {
