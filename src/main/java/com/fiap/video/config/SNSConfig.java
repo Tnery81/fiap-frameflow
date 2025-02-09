@@ -61,7 +61,7 @@ public class SNSConfig {
                 .withTopicArn(topicArn);
         GetTopicAttributesResult getTopicAttributesResult = snsClient().getTopicAttributes(getTopicAttributesRequest);
 
-        String topicArn = getTopicAttributesResult.getAttributes().get("TopicArn");
+        topicArn = getTopicAttributesResult.getAttributes().get("TopicArn");
 
 
         return new Topic().withTopicArn(topicArn);
