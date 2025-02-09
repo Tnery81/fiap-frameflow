@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class SQSSubscriber {
 
-
     private final ProcessVideoUseCase processVideoUseCase;
 
     @Autowired
@@ -23,12 +22,7 @@ public class SQSSubscriber {
     @io.awspring.cloud.sqs.annotation.SqsListener("${spring.cloud.aws.sqs.queue-name}")
     public void receiveMessage(Message<String> message) {
         String content = message.getPayload();
-        log.info("Mensagem recebida: " + message.toString());
 
-        if (content == null) {
-            log.error("Received null content from SQS");
-            return;
-        }
         try {
             JSONObject snsMessage = new JSONObject(content);
 
