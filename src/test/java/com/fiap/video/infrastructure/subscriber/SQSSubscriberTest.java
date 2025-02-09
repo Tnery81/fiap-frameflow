@@ -14,7 +14,7 @@ import org.springframework.messaging.Message;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
-public class SQSSubscriberTest {
+class SQSSubscriberTest {
 
     @Mock
     private ProcessVideoUseCase processVideoUseCase;

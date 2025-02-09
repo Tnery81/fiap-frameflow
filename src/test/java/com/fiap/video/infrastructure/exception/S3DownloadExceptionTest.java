@@ -3,7 +3,7 @@ package com.fiap.video.infrastructure.exception;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class S3DownloadExceptionTest {
+class S3DownloadExceptionTest {
 
     @Test
     void testExceptionMessageAndCause() {

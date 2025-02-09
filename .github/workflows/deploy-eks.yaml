@@ -2,7 +2,7 @@ name: Deploy AWS Academy - EKS
 
 on:
   workflow_run:
-    workflows: ["Java CI with Maven"]
+    workflows: [ "Java CI with Maven" ]
     types:
       - completed
 
@@ -30,7 +30,7 @@ jobs:
         run: aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.REGION_DEFAULT }}
 
       - name: Package & Tag
-        run: | 
+        run: |
           docker compose -f Docker/docker-compose.yml build web --no-cache
           docker tag cutter-frame-flow:latest 090111931170.dkr.ecr.us-east-1.amazonaws.com/frameflow-ecr:latest
           docker ps
@@ -39,21 +39,21 @@ jobs:
         run: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 090111931170.dkr.ecr.us-east-1.amazonaws.com
           docker push 090111931170.dkr.ecr.us-east-1.amazonaws.com/frameflow-ecr:latest
-          
+
       - name: Kube Secrets
         if: ${{ github.ref_name == 'master' }} && github.event_name == 'push'
         run: |
-         kubectl delete secret secret-frameflow --ignore-not-found
-         kubectl create secret generic secret-frameflow \
-            --from-literal=S3_VIDEO_KEY_AWS="${{ secrets.S3_VIDEO_KEY_AWS }}" \
-            --from-literal=S3_ZIP_KEY_AWS="${{ secrets.S3_ZIP_KEY_AWS }}" \
-            --from-literal=SQS_KEY_AWS="${{ secrets.SQS_KEY_AWS }}" \
-            --from-literal=SNS_KEY_AWS="${{ secrets.SNS_KEY_AWS }}" \
-            --from-literal=AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
-            --from-literal=AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
-            --from-literal=AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }} \
-            --from-literal=AWS_REGION=${{ secrets.AWS_REGION }}
-            
+          kubectl delete secret secret-frameflow --ignore-not-found
+          kubectl create secret generic secret-frameflow \
+             --from-literal=S3_VIDEO_KEY_AWS="${{ secrets.S3_VIDEO_KEY_AWS }}" \
+             --from-literal=S3_ZIP_KEY_AWS="${{ secrets.S3_ZIP_KEY_AWS }}" \
+             --from-literal=SQS_KEY_AWS="${{ secrets.SQS_KEY_AWS }}" \
+             --from-literal=SNS_KEY_AWS="${{ secrets.SNS_KEY_AWS }}" \
+             --from-literal=AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
+             --from-literal=AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+             --from-literal=AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }} \
+             --from-literal=AWS_REGION=${{ secrets.AWS_REGION }}
+
       - name: Kube Apply
         if: ${{ github.ref_name == 'master' }} && github.event_name == 'push'
         run: |

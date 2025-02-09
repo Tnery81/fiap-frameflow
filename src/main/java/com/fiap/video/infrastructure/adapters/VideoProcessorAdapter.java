@@ -34,37 +34,33 @@ public class VideoProcessorAdapter {
     public String extractFrames(Video video, String zipFileName, int intervalSeconds) {
         try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(video.getPath());
              ByteArrayOutputStream zipBaos = new ByteArrayOutputStream();
-             ZipOutputStream zipOut = new ZipOutputStream(zipBaos)) {
+             ZipOutputStream zipOut = new ZipOutputStream(zipBaos);
+             Java2DFrameConverter converter = new Java2DFrameConverter()) {
 
             grabber.start();
-            Java2DFrameConverter converter = new Java2DFrameConverter();
+
             int frameRate = (int) grabber.getFrameRate();
             int frameInterval = frameRate * intervalSeconds;
             int frameNumber = 0;
-
             Frame frame;
+
             while ((frame = grabber.grabImage()) != null) {
                 if (frameNumber % frameInterval == 0) {
                     BufferedImage bufferedImage = converter.getBufferedImage(frame);
-
-                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
-                    ImageIO.write(bufferedImage, "jpg", imageBaos);
-                    byte[] imageBytes = imageBaos.toByteArray();
-
-                    String fileName = "frame_" + String.format("%04d", frameNumber) + ".jpg";
-                    zipOut.putNextEntry(new ZipEntry(fileName));
-                    zipOut.write(imageBytes);
-                    zipOut.closeEntry();
-
-
+                    try (ByteArrayOutputStream imageBaos = new ByteArrayOutputStream()) { // Também garantindo fechamento do stream
+                        ImageIO.write(bufferedImage, "jpg", imageBaos);
+                        byte[] imageBytes = imageBaos.toByteArray();
+                        String fileName = "frame_" + String.format("%04d", frameNumber) + ".jpg";
+                        zipOut.putNextEntry(new ZipEntry(fileName));
+                        zipOut.write(imageBytes);
+                        zipOut.closeEntry();
+                    }
                 }
                 frameNumber++;
             }
 
             grabber.stop();
             zipOut.finish();
-
-
             return uploadToS3(zipFileName, zipBaos.toByteArray());
 
         } catch (IOException e) {

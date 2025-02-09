@@ -1,6 +1,5 @@
 package com.fiap.video.core.domain;
 
-import com.fiap.video.core.domain.Video;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

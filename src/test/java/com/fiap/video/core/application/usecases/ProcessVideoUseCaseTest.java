@@ -80,7 +80,6 @@ class ProcessVideoUseCaseTest {
 
         when(videoMessage.getVideoKeyS3()).thenReturn(videoKey);
         when(s3Service.downloadFile(videoKey)).thenReturn(mockFile);
-        OngoingStubbing<String> stringOngoingStubbing = when(videoProcessorAdapter.extractFrames(any(), eq(zipFileName), eq(10))).thenReturn(null);
 
         processVideoUseCase.process(videoMessage);
 

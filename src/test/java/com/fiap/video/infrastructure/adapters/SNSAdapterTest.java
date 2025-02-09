@@ -15,7 +15,7 @@ import org.mockito.MockitoAnnotations;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class SNSAdapterTest {
+class SNSAdapterTest {
 
     @Mock
     private SNSConfig snsConfig;
@@ -38,7 +38,7 @@ public class SNSAdapterTest {
 
 
     @Test
-    void testPublishMessage_shouldSendMessageToSNS() throws Exception {
+    void testPublishMessage_shouldSendMessageToSNS() {
         // Arrange
         VideoMessage videoMessage = new VideoMessage();
         videoMessage.setId("123");
@@ -61,7 +61,7 @@ public class SNSAdapterTest {
     }
 
     @Test
-    void testPublishMessage_shouldHandleException() throws Exception {
+    void testPublishMessage_shouldHandleException() {
         // Arrange
         VideoMessage videoMessage = new VideoMessage();
         videoMessage.setId("123");
