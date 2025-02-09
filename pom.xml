@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.fiap</groupId>
-    <artifactId>video</artifactId>
+    <artifactId>cutterframeflow</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>FIAP Video</name>
+    <name>cutterframeflow</name>
     <description>FIAP Video Application using JavaCV</description>
 
     <parent>
@@ -22,6 +22,13 @@
         <javacv.version>1.5.9</javacv.version>
         <ffmpeg.version>6.0-1.5.9</ffmpeg.version>
         <aws.sdk.version>2.20.135</aws.sdk.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <sonar.organization>frame-flow</sonar.organization>
+        <sonar.projectKey>cutter_frame_flow</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencyManagement>
@@ -163,6 +170,26 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

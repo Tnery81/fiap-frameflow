@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cutter-frame-flow
+  name: cutter-frame-flow
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: cutter-frame-flow
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: cutter-frame-flow
+    spec:
+      containers:
+        - name: cutter-frame-flow
+          image: 090111931170.dkr.ecr.us-east-1.amazonaws.com/frameflow-ecr
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          env:
+            - name: SQS_KEY_AWS
+              valueFrom:
+                secretKeyRef:
+                  name: secret-frameflow
+                  key: SQS_KEY_AWS
+            - name: S3_ZIP_KEY_AWS
+              valueFrom:
+                secretKeyRef:
+                  name: secret-frameflow
+                  key: S3_ZIP_KEY_AWS
+            - name: SNS_KEY_AWS
+              valueFrom:
+                secretKeyRef:
+                  name: secret-frameflow
+                  key: SNS_KEY_AWS
+
+            - name: S3_VIDEO_KEY_AWS
+              valueFrom:
+                secretKeyRef:
+                  name: secret-frameflow
+                  key: S3_VIDEO_KEY_AWSs
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: secret-frameflow
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: secret-frameflow
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_SESSION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: secret-frameflow
+                  key: AWS_SESSION_TOKEN
+            - name: AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: secret-frameflow
+                  key: AWS_REGION
+          livenessProbe:
+            httpGet:
+              path: /manage/health
+              port: 80
+              httpHeaders:
+                - name: Custom-Header
+                  value: Awesome
+            initialDelaySeconds: 30
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /manage/health
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 3
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
