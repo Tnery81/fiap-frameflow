@@ -43,8 +43,8 @@ jobs:
       - name: Kube Secrets
         if: ${{ github.ref_name == 'master' }} && github.event_name == 'push'
         run: |
-          kubectl delete secret secret-frameflow --ignore-not-found
-          kubectl create secret generic secret-frameflow \
+          kubectl delete secret cutter-secret-frameflow --ignore-not-found
+          kubectl create secret generic cutter-secret-frameflow \
              --from-literal=S3_VIDEO_KEY_AWS="${{ secrets.S3_VIDEO_KEY_AWS }}" \
              --from-literal=S3_ZIP_KEY_AWS="${{ secrets.S3_ZIP_KEY_AWS }}" \
              --from-literal=SQS_KEY_AWS="${{ secrets.SQS_KEY_AWS }}" \

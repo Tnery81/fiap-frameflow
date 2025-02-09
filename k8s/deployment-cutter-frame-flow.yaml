@@ -34,43 +34,43 @@ spec:
             - name: SQS_KEY_AWS
               valueFrom:
                 secretKeyRef:
-                  name: secret-frameflow
+                  name: cutter-secret-frameflow
                   key: SQS_KEY_AWS
             - name: S3_ZIP_KEY_AWS
               valueFrom:
                 secretKeyRef:
-                  name: secret-frameflow
+                  name: cutter-secret-frameflow
                   key: S3_ZIP_KEY_AWS
             - name: SNS_KEY_AWS
               valueFrom:
                 secretKeyRef:
-                  name: secret-frameflow
+                  name: cutter-secret-frameflow
                   key: SNS_KEY_AWS
 
             - name: S3_VIDEO_KEY_AWS
               valueFrom:
                 secretKeyRef:
-                  name: secret-frameflow
+                  name: cutter-secret-frameflow
                   key: S3_VIDEO_KEY_AWS
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: secret-frameflow
+                  name: cutter-secret-frameflow
                   key: AWS_ACCESS_KEY_ID
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: secret-frameflow
+                  name: cutter-secret-frameflow
                   key: AWS_SECRET_ACCESS_KEY
             - name: AWS_SESSION_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: secret-frameflow
+                  name: cutter-secret-frameflow
                   key: AWS_SESSION_TOKEN
             - name: AWS_REGION
               valueFrom:
                 secretKeyRef:
-                  name: secret-frameflow
+                  name: cutter-secret-frameflow
                   key: AWS_REGION
           livenessProbe:
             httpGet:
