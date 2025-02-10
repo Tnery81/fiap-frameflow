@@ -73,7 +73,6 @@ public class VideoProcessorAdapter {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketZipName)
                     .key(zipFileName)
-                    .acl(ObjectCannedACL.PUBLIC_READ)
                     .build();
 
             s3Config.getS3Client().putObject(putObjectRequest, RequestBody.fromBytes(zipData));

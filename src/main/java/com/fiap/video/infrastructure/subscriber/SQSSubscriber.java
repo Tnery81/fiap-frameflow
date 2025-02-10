@@ -2,6 +2,7 @@ package com.fiap.video.infrastructure.subscriber;
 
 import com.fiap.video.core.application.usecases.ProcessVideoUseCase;
 import com.fiap.video.core.domain.VideoMessage;
+import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ public class SQSSubscriber {
         this.processVideoUseCase = processVideoUseCase;
     }
 
-    @io.awspring.cloud.sqs.annotation.SqsListener("${spring.cloud.aws.sqs.queue-name}")
+    @SqsListener("video-carregado-subscriber-queue.fifo")
     public void receiveMessage(Message<String> message) {
         String content = message.getPayload();
 
