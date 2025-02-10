@@ -2,8 +2,8 @@ spring.cloud.config.enabled=true
 
 aws.sns.topicArn=${SNS_KEY_AWS}
 spring.cloud.aws.sqs.queue-name=${SQS_KEY_AWS}
-aws.s3.bucketZip=${S3_ZIP_KEY_AWS}
-aws.s3.bucketVideo=${S3_VIDEO_KEY_AWS}
+aws.s3.bucketZip=${S3_ZIP_KEY_AWS:frames-video-bucket}
+aws.s3.bucketVideo=${S3_VIDEO_KEY_AWS:original-video-bucket}
 
 aws.accessKeyId=${AWS_ACCESS_KEY_ID}
 aws.secretAccessKey=${AWS_SECRET_ACCESS_KEY}

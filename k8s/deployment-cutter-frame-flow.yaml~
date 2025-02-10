@@ -75,7 +75,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /manage/health
-              port: 8080
+              port: 80
               httpHeaders:
                 - name: Custom-Header
                   value: Awesome
@@ -84,7 +84,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /manage/health
-              port: 8080
+              port: 80
             initialDelaySeconds: 30
             periodSeconds: 3
       dnsPolicy: ClusterFirst
