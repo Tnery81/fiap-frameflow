@@ -16,7 +16,7 @@ spec:
     - nodePort: 30793
       port: 80
       protocol: TCP
-      targetPort: 8080
+      targetPort: 8787
   selector:
     app: cutter-frame-flow
   sessionAffinity: None

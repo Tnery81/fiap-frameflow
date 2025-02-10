@@ -1,7 +1,5 @@
 package com.fiap.video.config;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicSessionCredentials;
 import io.awspring.cloud.autoconfigure.sqs.SqsProperties;
 import io.awspring.cloud.sqs.listener.QueueNotFoundStrategy;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
@@ -9,9 +7,7 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
@@ -33,10 +29,6 @@ public class SQSConfig {
     @Value("${aws.token}")
     private String token;
 
-
-    @Value("https://sqs.us-east-1.amazonaws.com/090111931170/video-carregado-subscriber-queue.fifo")
-    private String queueUrl;
-
     private final String regionName = Region.US_EAST_1.toString();
 
 
@@ -51,6 +43,7 @@ public class SQSConfig {
     @Bean
     SqsAsyncClient sqsAsyncClient(SqsProperties properties) {
         AwsSessionCredentials credentials = AwsSessionCredentials.create(accessKeyId, secretAccessKey, token);
+        String queueUrl = "https://sqs.us-east-1.amazonaws.com/090111931170/video-carregado-subscriber-queue.fifo";
         return SqsAsyncClient.builder()
                 .credentialsProvider( StaticCredentialsProvider.create(credentials))
                 .region(Region.of(regionName))

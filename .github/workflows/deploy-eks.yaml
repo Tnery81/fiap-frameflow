@@ -32,13 +32,13 @@ jobs:
       - name: Package & Tag
         run: |
           docker compose -f Docker/docker-compose.yml build web --no-cache
-          docker tag cutter-frame-flow:latest 090111931170.dkr.ecr.us-east-1.amazonaws.com/frameflow-ecr:latest
+          docker tag cutter-frame-flow:latest 090111931170.dkr.ecr.us-east-1.amazonaws.com/cutter-frame-flow:latest
           docker ps
 
       - name: Push to ECR
         run: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 090111931170.dkr.ecr.us-east-1.amazonaws.com
-          docker push 090111931170.dkr.ecr.us-east-1.amazonaws.com/frameflow-ecr:latest
+          docker push 090111931170.dkr.ecr.us-east-1.amazonaws.com/cutter-frame-flow:latest
 
       - name: Kube Secrets
         if: ${{ github.ref_name == 'master' }} && github.event_name == 'push'

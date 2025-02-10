@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: cutter-frame-flow
-          image: 090111931170.dkr.ecr.us-east-1.amazonaws.com/frameflow-ecr
+          image: 090111931170.dkr.ecr.us-east-1.amazonaws.com/cutter-frame-flow
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -75,7 +75,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /manage/health
-              port: 8080
+              port: 8787
               httpHeaders:
                 - name: Custom-Header
                   value: Awesome
@@ -84,11 +84,11 @@ spec:
           readinessProbe:
             httpGet:
               path: /manage/health
-              port: 8080
+              port: 8787
             initialDelaySeconds: 60
             periodSeconds: 3
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
-      securityContext: {}
+      securityContext: { }
       terminationGracePeriodSeconds: 30
