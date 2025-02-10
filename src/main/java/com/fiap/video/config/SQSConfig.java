@@ -34,7 +34,7 @@ public class SQSConfig {
     private String token;
 
 
-    @Value("${https://sqs.us-east-1.amazonaws.com/090111931170/video-carregado-subscriber-queue.fifo}")
+    @Value("https://sqs.us-east-1.amazonaws.com/090111931170/video-carregado-subscriber-queue.fifo")
     private String queueUrl;
 
     private final String regionName = Region.US_EAST_1.toString();
