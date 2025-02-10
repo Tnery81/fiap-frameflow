@@ -49,6 +49,7 @@ jobs:
              --from-literal=S3_ZIP_KEY_AWS="${{ secrets.S3_ZIP_KEY_AWS }}" \
              --from-literal=SQS_KEY_AWS="${{ secrets.SQS_KEY_AWS }}" \
              --from-literal=SNS_KEY_AWS="${{ secrets.SNS_KEY_AWS }}" \
+             --from-literal=SQS_URL_AWS="${{ secrets.SQS_URL_AWS }}" \
              --from-literal=AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
              --from-literal=AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
              --from-literal=AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }} \
