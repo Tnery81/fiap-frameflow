@@ -5,6 +5,7 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
   # Set the working directory inside the container
 WORKDIR /app
 
+
   # Copy the Maven project files to the container
 COPY .. .
 
