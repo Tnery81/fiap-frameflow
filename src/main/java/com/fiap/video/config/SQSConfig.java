@@ -29,6 +29,9 @@ public class SQSConfig {
     @Value("${aws.token}")
     private String token;
 
+    @Value("${aws.queueUrl}")
+    private String queueUrl;
+
     private final String regionName = Region.US_EAST_1.toString();
 
 
@@ -43,7 +46,7 @@ public class SQSConfig {
     @Bean
     SqsAsyncClient sqsAsyncClient(SqsProperties properties) {
         AwsSessionCredentials credentials = AwsSessionCredentials.create(accessKeyId, secretAccessKey, token);
-        String queueUrl = "https://sqs.us-east-1.amazonaws.com/090111931170/video-carregado-subscriber-queue.fifo";
+        
         return SqsAsyncClient.builder()
                 .credentialsProvider( StaticCredentialsProvider.create(credentials))
                 .region(Region.of(regionName))
